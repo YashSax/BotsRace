@@ -24,8 +24,8 @@ class EnvironmentFactory:
         self.debug = debug
 
     # gets a random environment based on TRACK_OPTIONS, starts robot at x(0), y(0) at random orientation
-    def get_random_environment(self):
-        track = self.create_track(*self.TRACK_OPTIONS[5])#*random.choice(self.TRACK_OPTIONS)) # 1 IS THE BAD ONE
+    def get_random_environment(self, idx):
+        track = self.create_track(*self.TRACK_OPTIONS[idx])#*random.choice(self.TRACK_OPTIONS)) # 1 IS THE BAD ONE
         robot = Robot(track.points[0][0], track.points[0][1], random.random() * 2 * math.pi)
         return Environment(robot, track, self.debug)
 

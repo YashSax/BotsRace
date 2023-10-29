@@ -1,0 +1,8 @@
+bin/
+Include/
+Lib/
+lib64
+Scripts/
+share/
+venv1/
+*.pyc

@@ -2,6 +2,7 @@ import math
 from bots_race.environment_factory import EnvironmentFactory
 import matplotlib.pyplot as plt
 import pickle
+import random
 
 class Solution:
     def __init__(self):
@@ -10,7 +11,7 @@ class Solution:
         self.ANG_PID_P = 0.1
         self.ANG_PID_D = 5
         self.ANG_PID_I = 0
-        self.damping = 0.5
+        self.damping = 0.25
         self.prev_err = 0
         self.cum_err = 0
 
@@ -25,14 +26,21 @@ class Solution:
             "ps" : [],
             "is" : [],
             "ds" : [],
-            "target_angle" : []
+            "target_angle" : [],
+            "smoothed_angles" : [],
+            "unsmoothed_angles" : [],
+            "tops" : [],
+            "lefts" : [],
+            "bottoms" : [],
+            "rights" : []
         }
 
         self.beta = 0.95
         self.past_angles = []
         self.counter_since_vroom = 0
         self.max_depth = 100
-
+        self.i = 0
+    
     def track(self):
         # TODO fill in code here which initializes your controller
         # whenever your robot is placed on a new track
@@ -45,12 +53,17 @@ class Solution:
 
     def find_angle(self, robot_observation, smooth=False, append_to_list=False):
         angle = self.find_angle_helper(robot_observation)
+        self.data["unsmoothed_angles"].append(angle)
         if not append_to_list:
+            self.data["smoothed_angles"].append(angle)
             return angle
         self.past_angles.append(angle)
         if not smooth:
+            self.data["smoothed_angles"].append(angle)
             return angle
-        return self.get_smoothed(len(self.past_angles) - 1, self.past_angles, self.max_depth)
+        smoothed_angle = self.get_smoothed(len(self.past_angles) - 1, self.past_angles, self.max_depth)
+        self.data["smoothed_angles"].append(smoothed_angle) 
+        return smoothed_angle
 
     def find_angle_helper(self, robot_observation):
         ca, top, left, bottom, right = robot_observation
@@ -77,7 +90,6 @@ class Solution:
         d_component = error - self.prev_err
         i_component = error + self.cum_err 
 
-        # print("P:", p_component, "I:", i_component, "D:", d_component)
         correction = p_component * self.ANG_PID_P + d_component * self.ANG_PID_D + i_component * self.ANG_PID_I
         self.data["corrections"].append(abs(correction))
         self.data["ps"].append(abs(p_component * self.ANG_PID_P))
@@ -103,8 +115,18 @@ class Solution:
 
     # should return [linear_acceleration, angular_acceleration]
     def get_action(self, robot_observation):
+        self.i += 1
         self.counter_since_vroom += self.vroomed
         angle = self.find_angle(robot_observation, append_to_list=self.vroomed, smooth=self.counter_since_vroom >= 40)
+        
+        ca, top, left, bottom, right = robot_observation
+        self.data["tops"].append(top)
+        self.data["lefts"].append(left)
+        self.data["bottoms"].append(bottom)
+        self.data["rights"].append(right)
+        # if self.vroomed:
+        #     input()
+
         if angle is None:
             return [0, 0]
         angle %= 1
@@ -116,20 +138,52 @@ class Solution:
         if self.done_rising_edge(done) and not self.vroomed:
             lin_acc = 0.001
             self.vroomed = True
+            # print("Vroomed at idx:", self.i)
         elif self.done_falling_edge(done):
             lin_acc = -0.001
         
-        # print(f"Lin: {lin_acc}, Ang: {ang_acc}")
         return [lin_acc, ang_acc]
 
+def run_tests():
+    num_runs_per_track = 5
+    overall = 0
+    for idx in range(6):
+        fit_sum = 0
+        for _ in range(num_runs_per_track):
+            fit_sum += run_test(idx)
+        print(f"Average fitness for test {idx} = {fit_sum / num_runs_per_track}")
+        overall += fit_sum / num_runs_per_track
+    print(f"Overall average = {overall / 6}")
 
-
-# this is example of code to test your solution locally
-if __name__ == '__main__':
+def run_test(idx):
     solution = Solution()
 
     # TODO check out the environment_factory.py file to create your own test tracks
     env_factory = EnvironmentFactory(debug=False)
+    env = env_factory.get_random_environment(idx)
+
+    done = False
+    fitness = 0
+    robot_observation = env.reset()
+
+    # deviation = 0
+    # num_steps = 0
+    # start_at = 50
+    # stop_at = 1200
+    while not done:
+        robot_action = solution.get_action(robot_observation)
+        robot_observation, fitness, done = env.step(robot_action)
+
+    return fitness
+
+# this is example of code to test your solution locally
+if __name__ == '__main__':
+    run_tests()
+    assert False
+    solution = Solution()
+
+    # TODO check out the environment_factory.py file to create your own test tracks
+    env_factory = EnvironmentFactory(debug=True)
     env = env_factory.get_random_environment()
 
     done = False
@@ -143,6 +197,7 @@ if __name__ == '__main__':
     while not done:
         robot_action = solution.get_action(robot_observation)
         robot_observation, fitness, done = env.step(robot_action)
+        # input()
         # if num_steps > stop_at:
         #     break
         # num_steps += 1
