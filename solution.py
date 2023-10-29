@@ -26,13 +26,14 @@ class Solution:
             "ps" : [],
             "is" : [],
             "ds" : [],
-            "target_angle" : [],
             "smoothed_angles" : [],
             "unsmoothed_angles" : [],
+            "robot_angles" : [],
             "tops" : [],
             "lefts" : [],
             "bottoms" : [],
-            "rights" : []
+            "rights" : [],
+            "vroom_idx" : 0
         }
 
         self.beta = 0.95
@@ -46,14 +47,22 @@ class Solution:
         # whenever your robot is placed on a new track
         pass
     
+    def decompose(self, ang):
+        rad = 2 * math.pi * ang
+        x, y = math.cos(rad), math.sin(rad)
+    
+    def compose(self, x, y):
+        return math.atan2(y, x) * 1 / (2 * math.pi)
+
     def get_smoothed(self, idx, val_arr, curr_depth, beta=0.9):
         if idx == 0 or curr_depth == 0:
             return val_arr[idx]
         return val_arr[idx] * (1 - beta) + self.get_smoothed(idx - 1, val_arr, curr_depth - 1)  * beta
 
     def find_angle(self, robot_observation, smooth=False, append_to_list=False):
-        angle = self.find_angle_helper(robot_observation)
+        angle = self.find_angle_helper(robot_observation) % 1
         self.data["unsmoothed_angles"].append(angle)
+        self.data["robot_angles"].append(robot_observation[0] % 1)
         if not append_to_list:
             self.data["smoothed_angles"].append(angle)
             return angle
@@ -95,7 +104,6 @@ class Solution:
         self.data["ps"].append(abs(p_component * self.ANG_PID_P))
         self.data["is"].append(abs(d_component * self.ANG_PID_D))
         self.data["ds"].append(abs(i_component * self.ANG_PID_I))
-        self.data["target_angle"].append(angle)
 
         self.prev_err = error
         self.cum_err += error
@@ -138,14 +146,14 @@ class Solution:
         if self.done_rising_edge(done) and not self.vroomed:
             lin_acc = 0.001
             self.vroomed = True
-            # print("Vroomed at idx:", self.i)
+            self.data["vroom_time"] = self.i
         elif self.done_falling_edge(done):
             lin_acc = -0.001
         
         return [lin_acc, ang_acc]
 
 def run_tests():
-    num_runs_per_track = 5
+    num_runs_per_track = 10
     overall = 0
     for idx in range(6):
         fit_sum = 0
@@ -184,7 +192,7 @@ if __name__ == '__main__':
 
     # TODO check out the environment_factory.py file to create your own test tracks
     env_factory = EnvironmentFactory(debug=True)
-    env = env_factory.get_random_environment()
+    env = env_factory.get_random_environment(5)
 
     done = False
     fitness = 0
