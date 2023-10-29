@@ -50,14 +50,21 @@ class Solution:
     def decompose(self, ang):
         rad = 2 * math.pi * ang
         x, y = math.cos(rad), math.sin(rad)
-    
+        return x, y
+
     def compose(self, x, y):
         return math.atan2(y, x) * 1 / (2 * math.pi)
 
-    def get_smoothed(self, idx, val_arr, curr_depth, beta=0.9):
-        if idx == 0 or curr_depth == 0:
-            return val_arr[idx]
-        return val_arr[idx] * (1 - beta) + self.get_smoothed(idx - 1, val_arr, curr_depth - 1)  * beta
+    def get_smoothed(self, a_list, beta=0.95):
+        arr = [self.decompose(a) for a in a_list]
+        weights = [(1 - beta) * beta ** i for i in range(len(arr))][::-1]
+        x_sum, y_sum = sum([a[0] * w for a, w in zip(arr, weights)]), sum([a[1] * w for a, w in zip(arr, weights)])
+        return self.compose(x_sum, y_sum)
+
+    # def get_smoothed(self, idx, val_arr, curr_depth, beta=0.9):
+    #     if idx == 0 or curr_depth == 0:
+    #         return val_arr[idx]
+    #     return val_arr[idx] * (1 - beta) + self.get_smoothed(idx - 1, val_arr, curr_depth - 1)  * beta
 
     def find_angle(self, robot_observation, smooth=False, append_to_list=False):
         angle = self.find_angle_helper(robot_observation) % 1
@@ -70,7 +77,7 @@ class Solution:
         if not smooth:
             self.data["smoothed_angles"].append(angle)
             return angle
-        smoothed_angle = self.get_smoothed(len(self.past_angles) - 1, self.past_angles, self.max_depth)
+        smoothed_angle = self.get_smoothed(self.past_angles)
         self.data["smoothed_angles"].append(smoothed_angle) 
         return smoothed_angle
 
