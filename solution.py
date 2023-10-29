@@ -28,12 +28,31 @@ class Solution:
             "target_angle" : []
         }
 
+        self.beta = 0.95
+        self.past_angles = []
+        self.counter_since_vroom = 0
+        self.max_depth = 100
+
     def track(self):
         # TODO fill in code here which initializes your controller
         # whenever your robot is placed on a new track
         pass
     
-    def find_angle(self, robot_observation):
+    def get_smoothed(self, idx, val_arr, curr_depth, beta=0.9):
+        if idx == 0 or curr_depth == 0:
+            return val_arr[idx]
+        return val_arr[idx] * (1 - beta) + self.get_smoothed(idx - 1, val_arr, curr_depth - 1)  * beta
+
+    def find_angle(self, robot_observation, smooth=False, append_to_list=False):
+        angle = self.find_angle_helper(robot_observation)
+        if not append_to_list:
+            return angle
+        self.past_angles.append(angle)
+        if not smooth:
+            return angle
+        return self.get_smoothed(len(self.past_angles) - 1, self.past_angles, self.max_depth)
+
+    def find_angle_helper(self, robot_observation):
         ca, top, left, bottom, right = robot_observation
         if self.vroomed:
             bottom = 0
@@ -66,8 +85,6 @@ class Solution:
         self.data["ds"].append(abs(i_component * self.ANG_PID_I))
         self.data["target_angle"].append(angle)
 
-        print("Correction magnitude:", abs(correction))
-
         self.prev_err = error
         self.cum_err += error
 
@@ -86,7 +103,8 @@ class Solution:
 
     # should return [linear_acceleration, angular_acceleration]
     def get_action(self, robot_observation):
-        angle = self.find_angle(robot_observation)
+        self.counter_since_vroom += self.vroomed
+        angle = self.find_angle(robot_observation, append_to_list=self.vroomed, smooth=self.counter_since_vroom >= 40)
         if angle is None:
             return [0, 0]
         angle %= 1
@@ -106,23 +124,12 @@ class Solution:
 
 
 
-"""
-Find the angle
-Go to the angle (no linear acceleration)
-
-linear acceleration turns on
-
-repeat:
-find the angle (no bottom)
-go to the angle
-"""
-
 # this is example of code to test your solution locally
 if __name__ == '__main__':
     solution = Solution()
 
     # TODO check out the environment_factory.py file to create your own test tracks
-    env_factory = EnvironmentFactory(debug=True)
+    env_factory = EnvironmentFactory(debug=False)
     env = env_factory.get_random_environment()
 
     done = False
