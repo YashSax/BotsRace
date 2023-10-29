@@ -7,6 +7,11 @@ import random
 class Solution:
     def __init__(self):
         # TODO code to initialize your solution
+        self.track()
+    
+    def track(self):
+        # TODO fill in code here which initializes your controller
+        # whenever your robot is placed on a new track
         self.ANG_ERR_THRESH = 0.01
         self.ANG_PID_P = 0.1
         self.ANG_PID_D = 5
@@ -41,11 +46,6 @@ class Solution:
         self.counter_since_vroom = 0
         self.max_depth = 100
         self.i = 0
-    
-    def track(self):
-        # TODO fill in code here which initializes your controller
-        # whenever your robot is placed on a new track
-        pass
     
     def decompose(self, ang):
         rad = 2 * math.pi * ang
@@ -193,13 +193,13 @@ def run_test(idx):
 
 # this is example of code to test your solution locally
 if __name__ == '__main__':
-    run_tests()
-    assert False
+    # run_tests()
+    # assert False
     solution = Solution()
 
     # TODO check out the environment_factory.py file to create your own test tracks
     env_factory = EnvironmentFactory(debug=True)
-    env = env_factory.get_random_environment(5)
+    env = env_factory.get_random_environment(2)
 
     done = False
     fitness = 0
