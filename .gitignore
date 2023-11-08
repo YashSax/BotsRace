@@ -6,3 +6,6 @@ Scripts/
 share/
 venv1/
 *.pyc
+solution_out
+bots_race/__pycache__/environment_factory.cpython-311.pyc
+solution_out

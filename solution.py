@@ -195,11 +195,12 @@ def run_test(idx):
 if __name__ == '__main__':
     # run_tests()
     # assert False
+
     solution = Solution()
 
     # TODO check out the environment_factory.py file to create your own test tracks
-    env_factory = EnvironmentFactory(debug=True)
-    env = env_factory.get_random_environment(2)
+    env_factory = EnvironmentFactory(debug=False)
+    env = env_factory.get_random_environment(0)
 
     done = False
     fitness = 0
