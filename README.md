@@ -1,5 +1,5 @@
 ## Problem Statement
-Simply put: Make a robot follow a given path by passing in values for linear and angular acceleration. Full information here:
+Simply put: Make a robot follow a given path by passing in values for linear and angular acceleration. Full information [here](https://tamudatathon.com/challenges/docs/BotsRace):
 
 ## Demo
 https://github.com/YashSax/BotsRace/assets/46911428/62933265-ed1a-4761-a767-a8805ef3424b
