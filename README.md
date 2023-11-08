@@ -1,3 +1,9 @@
+## Problem Statement
+Simply put: Make a robot follow a given path by passing in values for linear and angular acceleration. Full information here:
+
+## Demo
+https://github.com/YashSax/BotsRace/assets/46911428/62933265-ed1a-4761-a767-a8805ef3424b
+
 ## Inspiration
 We initially tried to throw Reinforcement Learning at the problem by using [NEAT](https://en.wikipedia.org/wiki/Neuroevolution_of_augmenting_topologies) (NeuroEvolution of Augmenting Topologies) and Genetic Algorithms to generate many potential candidate drivers, evaluate their fitness, remove the worst, and combine the best. However, after about half an hour of training and much more time invested in playing with various hyperparameters, we hit a dead end. At that point, we decided to instead approach the problem from a first-principles approach using [PID control](https://en.wikipedia.org/wiki/Proportional%E2%80%93integral%E2%80%93derivative_controller). In our implementation journey, we ran into a lot of interesting problems!
 
